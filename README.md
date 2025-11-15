@@ -118,12 +118,12 @@ REY_BLANCO = 6,     REY_NEGRO = -6
 - Se detiene al encontrar otra pieza
 
 **♞ Caballo (CABALLO_BLANCO/CABALLO_NEGRO)**:
-- Movimiento en L (2 casillas en una dirección, 1 en perpendicular)
-- Puede saltar sobre otras piezas
+- Movimiento en L (2 casillas en una dirección, 1 en perpendicular).
+- Puede saltar sobre otras piezas.
 
 **♝ Alfil (ALFIL_BLANCO/ALFIL_NEGRO)**:
-- Movimiento diagonal ilimitado
-- Se detiene al encontrar otra pieza
+- Movimiento diagonal ilimitado.
+- Se detiene al encontrar otra pieza.
 
 **♛ Reina (REINA_BLANCA/REINA_NEGRA)**:
 - Combina movimientos de torre y alfil
@@ -230,24 +230,32 @@ El código está organizado en secciones:
 
 ## 🚀 Mejoras Futuras
 
-- [ ] Implementar detección de jaque y jaque mate
-- [ ] Implementar enroque
-- [ ] Implementar en passant
-- [ ] Implementar promoción de peón
-- [ ] Implementar IA básica
-- [ ] Mejorar la visualización de selección de piezas
-- [ ] Agregar sonidos 🔊
-- [ ] Agregar animaciones de movimiento
-- [ ] Implementar guardado/carga de partidas 💾
-- [ ] Agregar modo de análisis de partidas
+- [ ] Implementar detección de jaque y jaque mate.
+- [ ] Implementar enroque.
+- [ ] Implementar en passant.
+- [ ] Implementar promoción de peón.
+- [ ] Implementar IA básica.
+- [ ] Mejorar la visualización de selección de piezas.
+- [ ] Agregar sonidos 🔊.
+- [ ] Agregar animaciones de movimiento.
+- [ ] Implementar guardado/carga de partidas 💾.
+- [ ] Agregar modo de análisis de partidas.
 
 ## 👨‍💻 Autor
 
-**Luis Fernando Contreras Matla**
+**Luis Fernando Contreras Matla.**
 
-## 🎓 Información Académica
+## 📚 Información Académica
 
-Este proyecto fue creado para la materia de **Graficación por Computadora** de la **Universidad Veracruzana**.
+Este proyecto fue desarrollado como parte de la Experiencia Educativa:
+
+**Materia:** Graficación por Computadora.
+
+**Universidad:** Universidad Veracruzana.
+
+**Facultad:** Ingeniería Eléctrica y Electrónica.
+
+**Docente:** Yuliana Berumen Diaz.
 
 ## 📝 Licencia
 
