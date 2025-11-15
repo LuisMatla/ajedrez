@@ -14,10 +14,14 @@ Este proyecto fue creado para la materia de **Graficación por Computadora** de 
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **C** - Lenguaje de programación
-- **OpenGL** - API de gráficos 3D
-- **GLUT** - Biblioteca de utilidades para OpenGL
-- **Mesa** - Implementación de OpenGL
+<div align="center">
+
+<img src="https://img.shields.io/badge/C-A8A8A8?style=for-the-badge&logo=c&logoColor=FFFFFF&labelColor=A8A8A8" alt="C" />
+<img src="https://img.shields.io/badge/OPENGL-5586A4?style=for-the-badge&logo=opengl&logoColor=FFFFFF&labelColor=5586A4" alt="OpenGL" />
+<img src="https://img.shields.io/badge/GLUT-DD6B6B?style=for-the-badge&logo=opengl&logoColor=FFFFFF&labelColor=DD6B6B" alt="GLUT" />
+<img src="https://img.shields.io/badge/MESA-0000FF?style=for-the-badge&logo=opengl&logoColor=FFFFFF&labelColor=0000FF" alt="Mesa" />
+
+</div>
 
 ## Descripción General
 
