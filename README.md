@@ -1,14 +1,29 @@
-# Ajedrez 3D con OpenGL/GLUT
+# 🎮 Ajedrez 3D con OpenGL/GLUT
 
 ⚠️ **ESTADO: INCOMPLETO** ⚠️
 
 Este proyecto es un juego de ajedrez 3D implementado en C usando OpenGL y GLUT. Actualmente está en desarrollo y algunas funcionalidades pueden no estar completamente implementadas o pueden tener bugs.
 
+## 👨‍💻 Autor
+
+**Luis Fernando Contreras Matla**
+
+## 🎓 Información Académica
+
+Este proyecto fue creado para la materia de **Graficación por Computadora** de la **Universidad Veracruzana**.
+
+## 🛠️ Tecnologías Utilizadas
+
+- **C** - Lenguaje de programación
+- **OpenGL** - API de gráficos 3D
+- **GLUT** - Biblioteca de utilidades para OpenGL
+- **Mesa** - Implementación de OpenGL
+
 ## Descripción General
 
 Este programa implementa un juego de ajedrez en 3D donde los jugadores pueden ver el tablero desde una perspectiva isométrica, seleccionar piezas, ver movimientos válidos y jugar turnos alternados.
 
-## Requisitos del Sistema
+## 📋 Requisitos del Sistema
 
 - **Compilador**: GCC
 - **Bibliotecas**:
@@ -17,21 +32,21 @@ Este programa implementa un juego de ajedrez en 3D donde los jugadores pueden ve
   - GLUT/FreeGLUT (libglut)
   - Matemáticas (libm)
 
-## Compilación
+## 🔨 Compilación
 
 ```bash
 gcc ajedrez.c -o ajedrez -lGL -lGLU -lglut -lm
 ```
 
-## Ejecución
+## ▶️ Ejecución
 
 ```bash
 ./ajedrez
 ```
 
-## Estructura del Programa
+## 📐 Estructura del Programa
 
-### Estados del Juego
+### 🎯 Estados del Juego
 
 El programa utiliza un sistema de estados (`EstadoJuego`) para manejar diferentes pantallas:
 
@@ -41,7 +56,7 @@ El programa utiliza un sistema de estados (`EstadoJuego`) para manejar diferente
 4. **JUGANDO_UNO_VS_UNO**: Estado de juego para dos jugadores
 5. **JUGANDO_UNO_VS_IA**: Estado de juego contra IA (no implementado completamente)
 
-### Sistema de Tablero
+### 🎲 Sistema de Tablero
 
 El tablero se representa mediante una matriz 8x8 (`tableroJuego[8][8]`) donde:
 - **Fila 0-7**: Representa las filas del tablero (1-8 en notación de ajedrez)
@@ -49,7 +64,7 @@ El tablero se representa mediante una matriz 8x8 (`tableroJuego[8][8]`) donde:
 - **Coordenada (0,0)**: Corresponde a A1 (esquina inferior izquierda para blancas)
 - **Coordenada (7,7)**: Corresponde a H8 (esquina superior derecha para blancas)
 
-### Tipos de Piezas
+### ♟️ Tipos de Piezas
 
 Las piezas se representan mediante un enum `TipoPieza`:
 - Valores positivos: Piezas blancas (1-6)
@@ -65,84 +80,84 @@ REINA_BLANCA = 5,   REINA_NEGRA = -5
 REY_BLANCO = 6,     REY_NEGRO = -6
 ```
 
-### Sistema de Turnos
+### 🔄 Sistema de Turnos
 
 - `turnoActual = 1`: Turno de las piezas blancas
 - `turnoActual = -1`: Turno de las piezas negras
 - Solo se pueden mover piezas del color correspondiente al turno actual
 
-### Selección de Piezas
+### 🖱️ Selección de Piezas
 
 - `filaSeleccionada` y `columnaSeleccionada`: Coordenadas de la pieza seleccionada (-1 si no hay selección)
 - `casillasValidas[8][8]`: Matriz que marca las casillas válidas para movimiento (1 = válida, 0 = no válida)
 
-## Funcionalidades Implementadas
+## ✨ Funcionalidades Implementadas
 
-### 1. Menú Inicial
+### 1. 📋 Menú Inicial
 - Botones para seleccionar "Uno vs Uno" o "Uno vs IA"
 - Botón de flecha para volver atrás
 - Detección de clics en botones
 
-### 2. Entrada de Nombres
+### 2. ✍️ Entrada de Nombres
 - Solicita nombres de jugadores uno por uno
 - Muestra el nombre ingresado junto con una pieza del color correspondiente
 - Soporte para imágenes personalizadas de jugadores (usando stb_image.h)
 
-### 3. Tablero 3D
+### 3. 🎨 Tablero 3D
 - Tablero con patrón de colores alternado (rosa claro y morado)
 - Vista isométrica desde arriba
 - Piezas modeladas en 3D usando primitivas de OpenGL
 
-### 4. Sistema de Movimientos
+### 4. 🎯 Sistema de Movimientos
 
 #### Movimientos Implementados por Pieza:
 
-**Peón (PEON_BLANCO/PEON_NEGRO)**:
+**♟️ Peón (PEON_BLANCO/PEON_NEGRO)**:
 - Primer movimiento: 1 o 2 casillas hacia adelante
 - Movimientos normales: 1 casilla hacia adelante
 - Captura: Diagonal (solo si hay pieza enemiga)
 - No implementado: En passant, promoción
 
-**Torre (TORRE_BLANCA/TORRE_NEGRA)**:
+**♜ Torre (TORRE_BLANCA/TORRE_NEGRA)**:
 - Movimiento horizontal y vertical ilimitado
 - Se detiene al encontrar otra pieza
 
-**Caballo (CABALLO_BLANCO/CABALLO_NEGRO)**:
+**♞ Caballo (CABALLO_BLANCO/CABALLO_NEGRO)**:
 - Movimiento en L (2 casillas en una dirección, 1 en perpendicular)
 - Puede saltar sobre otras piezas
 
-**Alfil (ALFIL_BLANCO/ALFIL_NEGRO)**:
+**♝ Alfil (ALFIL_BLANCO/ALFIL_NEGRO)**:
 - Movimiento diagonal ilimitado
 - Se detiene al encontrar otra pieza
 
-**Reina (REINA_BLANCA/REINA_NEGRA)**:
+**♛ Reina (REINA_BLANCA/REINA_NEGRA)**:
 - Combina movimientos de torre y alfil
 - Movimiento horizontal, vertical y diagonal ilimitado
 
-**Rey (REY_BLANCO/REY_NEGRO)**:
+**♚ Rey (REY_BLANCO/REY_NEGRO)**:
 - Movimiento de 1 casilla en cualquier dirección
 - No implementado: Enroque, detección de jaque
 
-### 5. Visualización de Movimientos Válidos
+### 5. 🔴 Visualización de Movimientos Válidos
 - Cuando se selecciona una pieza, se muestran cuadros rojos en las casillas válidas
 - Los cuadros rojos se dibujan ligeramente por encima del tablero
 
-### 6. Control de Cámara
+### 6. 📷 Control de Cámara
 - **Zoom**: Rueda del mouse (acerca/aleja)
 - **Rotación**: Clic derecho + arrastrar (rota la vista)
 - Vista isométrica fija (no se puede mover el tablero)
 
-### 7. Interacción con el Mouse
+### 7. 🖱️ Interacción con el Mouse
 - **Clic izquierdo**: Selecciona pieza o mueve pieza seleccionada
 - Conversión de coordenadas de pantalla a coordenadas del tablero usando `gluUnProject`
 
-## Funciones Principales
+## 🔧 Funciones Principales
 
-### Inicialización
+### ⚙️ Inicialización
 - `inicializarTablero()`: Coloca todas las piezas en sus posiciones iniciales
 - `reshape2()`: Maneja el redimensionamiento de la ventana y configura la proyección
 
-### Cálculo de Movimientos
+### 🧮 Cálculo de Movimientos
 - `calcularMovimientosValidos(int fila, int columna)`: Calcula y marca las casillas válidas
 - `calcularMovimientosPeon()`: Movimientos específicos del peón
 - `calcularMovimientosTorre()`: Movimientos específicos de la torre
@@ -151,38 +166,38 @@ REY_BLANCO = 6,     REY_NEGRO = -6
 - `calcularMovimientosReina()`: Movimientos específicos de la reina
 - `calcularMovimientosRey()`: Movimientos específicos del rey
 
-### Dibujo
+### 🎨 Dibujo
 - `dibujarJuego()`: Función principal de renderizado del juego
 - `dibujarPiezaSegunTipo()`: Dibuja una pieza según su tipo y posición
 - `dibujar_tablero()`: Dibuja el tablero con patrón de colores
 - `dibujarCuadroRojo()`: Dibuja un cuadro rojo para indicar movimiento válido
 - Funciones individuales de piezas: `dibujar_Rey()`, `dibujar_Reina()`, `dibujar_Alfil()`, `dibujar_Caballo()`, `dibujar_Torre()`, `dibujar_Peon()`
 
-### Interacción
+### 🖱️ Interacción
 - `mouseAjedrezFunc()`: Maneja los clics del mouse en el tablero
 - `keyboardtodos()`: Maneja la entrada de texto para nombres de jugadores
 - `specialKeys()`: Maneja teclas especiales (zoom, rotación)
 
-## Variables Globales Importantes
+## 📊 Variables Globales Importantes
 
-### Control de Cámara
+### 📷 Control de Cámara
 - `cameraX`, `cameraY`, `cameraZ`: Posición de la cámara
 - `rotacionX`, `rotacionY`: Ángulos de rotación
 - `zoomJuego`: Nivel de zoom
 
-### Estado del Juego
+### 🎮 Estado del Juego
 - `estadoActual`: Estado actual del juego (menú, entrada de nombres, juego)
 - `tableroJuego[8][8]`: Estado del tablero
 - `turnoActual`: Turno actual (1 = blancas, -1 = negras)
 - `filaSeleccionada`, `columnaSeleccionada`: Pieza seleccionada
 - `casillasValidas[8][8]`: Casillas válidas para movimiento
 
-### Interfaz
+### 💻 Interfaz
 - `nombreJugadorBlanco[]`, `nombreJugadorNegro[]`: Nombres de los jugadores
 - `inputBuffer[]`: Buffer para entrada de texto
 - `texturaPiezaBlanca`, `texturaPiezaNegra`: Texturas para imágenes de jugadores
 
-## Problemas Conocidos / Limitaciones
+## ⚠️ Problemas Conocidos / Limitaciones
 
 ⚠️ **El proyecto está INCOMPLETO**. Algunas limitaciones conocidas:
 
@@ -197,7 +212,7 @@ REY_BLANCO = 6,     REY_NEGRO = -6
 4. **Fin del Juego**: No hay detección de fin de partida
 5. **Validación**: No se valida si un movimiento deja al rey propio en jaque
 
-## Estructura del Código
+## 📁 Estructura del Código
 
 El código está organizado en secciones:
 
@@ -210,7 +225,7 @@ El código está organizado en secciones:
 7. **Funciones de OpenGL**: Callbacks de GLUT (display, mouse, keyboard)
 8. **Función main**: Inicialización de ventanas y GLUT
 
-## Notas Técnicas
+## 💡 Notas Técnicas
 
 - El programa usa `gluUnProject` para convertir coordenadas de pantalla a coordenadas del mundo 3D
 - Las piezas se dibujan usando primitivas de OpenGL (GL_QUADS, glutSolidSphere, glutSolidTorus, etc.)
@@ -218,7 +233,7 @@ El código está organizado en secciones:
 - El color se maneja con `glColor3f()` y `GL_COLOR_MATERIAL` para compatibilidad con iluminación
 - Las imágenes de jugadores se cargan usando `stb_image.h` (single-file header library)
 
-## Mejoras Futuras
+## 🚀 Mejoras Futuras
 
 - [ ] Implementar detección de jaque y jaque mate
 - [ ] Implementar enroque
@@ -226,15 +241,11 @@ El código está organizado en secciones:
 - [ ] Implementar promoción de peón
 - [ ] Implementar IA básica
 - [ ] Mejorar la visualización de selección de piezas
-- [ ] Agregar sonidos
+- [ ] Agregar sonidos 🔊
 - [ ] Agregar animaciones de movimiento
-- [ ] Implementar guardado/carga de partidas
+- [ ] Implementar guardado/carga de partidas 💾
 - [ ] Agregar modo de análisis de partidas
 
-## Autor
-
-Luis Matla
-
-## Licencia
+## 📝 Licencia
 
 Este proyecto es de código abierto para fines educativos.
