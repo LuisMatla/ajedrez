@@ -14,35 +14,10 @@ Este proyecto fue creado para la materia de **Graficación por Computadora** de 
 
 ## 🛠️ Tecnologías Utilizadas
 
-<div align="center">
-
-![C](https://img.shields.io/badge/C-A8A8A8?style=for-the-badge&logo=c&logoColor=555555)
-![OpenGL](https://img.shields.io/badge/OpenGL-5586A4?style=for-the-badge&logo=opengl&logoColor=white)
-![GLUT](https://img.shields.io/badge/GLUT-DD6B6B?style=for-the-badge&logo=opengl&logoColor=white)
-![Mesa](https://img.shields.io/badge/Mesa-0000FF?style=for-the-badge&logo=opengl&logoColor=white)
-
-</div>
-
-<table>
-<tr>
-<td align="center" width="25%">
-  <img src="https://img.shields.io/badge/C-A8A8A8?style=flat-square&logo=c&logoColor=555555" alt="C" />
-  <br>C
-</td>
-<td align="center" width="25%">
-  <img src="https://img.shields.io/badge/OpenGL-5586A4?style=flat-square&logo=opengl&logoColor=white" alt="OpenGL" />
-  <br>OpenGL
-</td>
-<td align="center" width="25%">
-  <img src="https://img.shields.io/badge/GLUT-DD6B6B?style=flat-square&logo=opengl&logoColor=white" alt="GLUT" />
-  <br>GLUT
-</td>
-<td align="center" width="25%">
-  <img src="https://img.shields.io/badge/Mesa-0000FF?style=flat-square&logo=opengl&logoColor=white" alt="Mesa" />
-  <br>Mesa
-</td>
-</tr>
-</table>
+- **C** - Lenguaje de programación
+- **OpenGL** - API de gráficos 3D
+- **GLUT** - Biblioteca de utilidades para OpenGL
+- **Mesa** - Implementación de OpenGL
 
 ## Descripción General
 
