@@ -1,0 +1,46 @@
+#include <GL/glut.h>
+
+void dibujar_triángulo() {
+    glBegin(GL_TRIANGLES);
+    glVertex2f(0.0, 0.0);
+    glVertex2f(10.0, 0.0);
+    glVertex2f(5.0, 10.0);
+    glEnd();
+}
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glLoadIdentity();
+    glColor3f(1.0, 1.0, 1.0);
+    dibujar_triángulo(); // Líneas sólidas
+
+    glEnable(GL_LINE_STIPPLE);
+    glLineStipple(1, 0xF0F0);
+    glLoadIdentity();
+    glTranslatef(-20.0, 0.0, 0.0);
+    dibujar_triángulo(); // Líneas punteadas
+
+    glLineStipple(1, 0xF00F);
+    glLoadIdentity();
+    glScalef(1.0, 5.0, 0.0);
+    dibujar_triángulo(); // Líneas discontinuas largas
+
+    glLineStipple(1, 0x8888);
+    glLoadIdentity();
+    glRotatef(90, 0, 0, 1);
+    dibujar_triángulo(); // Líneas punteadas
+
+    glDisable(GL_LINE_STIPPLE);
+
+    glFlush();
+}
+
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    glutCreateWindow("OpenGL Triángulos con Diferentes Estilos de Líneas");
+    glutDisplayFunc(display);
+    glOrtho(0, 50, 0, 50, -1, 1); // Configurar la proyección ortográfica
+    glutMainLoop();
+    return 0;
+}

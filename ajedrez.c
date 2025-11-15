@@ -1,686 +1,1082 @@
+//incluir la biblioteca glut para gráficos.
 #include <GL/glut.h>
+//incluir la biblioteca matemática.
 #include <math.h>
+//incluir la biblioteca estándar de entrada y salida.
 #include <stdio.h>
+//incluir la biblioteca de manipulación de cadenas.
 #include <string.h>
+//definir la implementación de stb_image.
 #define STB_IMAGE_IMPLEMENTATION
+//incluir la biblioteca stb_image para cargar imágenes.
 #include "stb_image.h"
 
-//Definición de una estructura para representar un punto en el espacio tridimensional.
+//estructura para representar un punto en el espacio tridimensional.
 struct punto {
-    float x; //miembro 'x' de tipo float para representar la coordenada x.
-    float y; //miembro 'y' de tipo float para representar la coordenada y.
-    float z; //miembro 'z' de tipo float para representar la coordenada z.
+    //coordenada x del punto.
+    float x;
+    //coordenada y del punto.
+    float y;
+    //coordenada z del punto.
+    float z;
 };
 
-//Ayuda a organizar y almacenar las coordenadas cartesianas de un punto en el espacio tridimensional. 
+//función para convertir coordenadas esféricas a cartesianas.
 struct punto esferico(float alpha, float beta, float r){
-    struct punto p; //declara una variable llamada 'p' de tipo 'struct punto'.
-    p.x = r * cos(alpha) * cos(beta); //calcula la coordenada x del punto en coordenadas esféricas y la asigna a 'p.x'.
-    p.y = r * sin(alpha) * cos(beta); //calcula la coordenada y del punto en coordenadas esféricas y la asigna a 'p.y'.
-    p.z = r * sin(beta); //calcula la coordenada z del punto en coordenadas esféricas y la asigna a 'p.z'.
-    return p; //retorna la estructura 'p', que ahora contiene las coordenadas en formato esférico convertidas a coordenadas cartesianas.
+    //variable para almacenar el punto resultante.
+    struct punto p;
+    //calcular la coordenada x usando las funciones trigonométricas.
+    p.x = r * cos(alpha) * cos(beta);
+    //calcular la coordenada y usando las funciones trigonométricas.
+    p.y = r * sin(alpha) * cos(beta);
+    //calcular la coordenada z usando las funciones trigonométricas.
+    p.z = r * sin(beta);
+    //retornar el punto con las coordenadas calculadas.
+    return p;
 }
 
-//Declaramos como variables globales para que se puedan hacer las ventanas
+//identificadores de ventanas para las diferentes vistas del juego.
 int piezablanca, piezanegra, tablero, tableroconpiezas, ajedrez;
 
-//Estados del juego
+//enumeración para los diferentes estados del juego.
 typedef enum {
+    //estado inicial mostrando el menú principal.
     MENU_INICIAL,
+    //estado solicitando el nombre del jugador de piezas blancas.
     SOLICITANDO_NOMBRE_BLANCO,
+    //estado solicitando el nombre del jugador de piezas negras.
     SOLICITANDO_NOMBRE_NEGRO,
+    //estado de juego para dos jugadores.
     JUGANDO_UNO_VS_UNO,
+    //estado de juego contra inteligencia artificial.
     JUGANDO_UNO_VS_IA
 } EstadoJuego;
 
+//variable que almacena el estado actual del juego.
 EstadoJuego estadoActual = MENU_INICIAL;
 
-//Variables para nombres de jugadores
+//arreglo para almacenar el nombre del jugador de piezas blancas.
 char nombreJugadorBlanco[50] = "";
+//arreglo para almacenar el nombre del jugador de piezas negras.
 char nombreJugadorNegro[50] = "";
+//buffer temporal para la entrada de texto.
 char inputBuffer[50] = "";
+//bandera que indica si la entrada de texto está activa.
 int inputActivo = 0;
+//índice actual en el buffer de entrada.
 int inputIndex = 0;
 
-//Variables para el zoom del tablero en modo juego
+//nivel de zoom del tablero en modo juego.
 float zoomJuego = 12.0;
 
-//Variables para la rotación de la cámara en modo juego
+//ángulo de rotación de la cámara en el eje x.
 float rotacionCamaraX = 0.0;
+//ángulo de rotación de la cámara en el eje y.
 float rotacionCamaraY = 0.0;
 
-//Sistema de jugabilidad
+//enumeración para los diferentes tipos de piezas del ajedrez.
 typedef enum {
+    //casilla vacía sin pieza.
     VACIO = 0,
+    //peón de color blanco.
     PEON_BLANCO = 1,
+    //torre de color blanco.
     TORRE_BLANCA = 2,
+    //caballo de color blanco.
     CABALLO_BLANCO = 3,
+    //alfil de color blanco.
     ALFIL_BLANCO = 4,
+    //reina de color blanco.
     REINA_BLANCA = 5,
+    //rey de color blanco.
     REY_BLANCO = 6,
+    //peón de color negro.
     PEON_NEGRO = -1,
+    //torre de color negro.
     TORRE_NEGRA = -2,
+    //caballo de color negro.
     CABALLO_NEGRO = -3,
+    //alfil de color negro.
     ALFIL_NEGRO = -4,
+    //reina de color negro.
     REINA_NEGRA = -5,
+    //rey de color negro.
     REY_NEGRO = -6
 } TipoPieza;
 
-//Tablero 8x8: fila 0-7, columna 0-7 (0,0 es A1, 7,7 es H8)
+//matriz que representa el estado del tablero de ajedrez.
 TipoPieza tableroJuego[8][8];
 
-//Turno actual: 1 = blancas, -1 = negras
+//variable que indica el turno actual, 1 para blancas y -1 para negras.
 int turnoActual = 1;
 
-//Pieza seleccionada: -1 si no hay selección, sino (fila*8 + columna)
+//índice de la pieza seleccionada, -1 si no hay selección.
 int piezaSeleccionada = -1;
+//fila de la pieza seleccionada en el tablero.
 int filaSeleccionada = -1;
+//columna de la pieza seleccionada en el tablero.
 int columnaSeleccionada = -1;
 
-//Casillas válidas para movimiento (para dibujar en rojo)
-int casillasValidas[8][8]; // 1 = válida, 0 = no válida
+//matriz que marca las casillas válidas para movimiento.
+int casillasValidas[8][8];
 
-//Variables para la imagen de la pieza negra
+//puntero a los datos de la imagen de la pieza negra.
 unsigned char* imagenPiezaNegra = NULL;
-int anchoImagen = 0, altoImagen = 0, canalesImagen = 0;
+//ancho de la imagen de la pieza negra en píxeles.
+int anchoImagen = 0;
+//alto de la imagen de la pieza negra en píxeles.
+int altoImagen = 0;
+//número de canales de color de la imagen de la pieza negra.
+int canalesImagen = 0;
+//identificador de la textura de opengl para la pieza negra.
 GLuint texturaPiezaNegra = 0;
+//bandera que indica si la textura de la pieza negra ha sido cargada.
 int texturaCargada = 0;
 
-//Variables para la imagen de la pieza blanca
+//puntero a los datos de la imagen de la pieza blanca.
 unsigned char* imagenPiezaBlanca = NULL;
-int anchoImagenBlanca = 0, altoImagenBlanca = 0, canalesImagenBlanca = 0;
+//ancho de la imagen de la pieza blanca en píxeles.
+int anchoImagenBlanca = 0;
+//alto de la imagen de la pieza blanca en píxeles.
+int altoImagenBlanca = 0;
+//número de canales de color de la imagen de la pieza blanca.
+int canalesImagenBlanca = 0;
+//identificador de la textura de opengl para la pieza blanca.
 GLuint texturaPiezaBlanca = 0;
+//bandera que indica si la textura de la pieza blanca ha sido cargada.
 int texturaBlancaCargada = 0;
 
-//Declaración de variables globales para la rotacion de la camara en X, Y, Z.
+//ángulo de rotación de la cámara en el eje x.
 float rotationAngleX = 0.0;
+//ángulo de rotación de la cámara en el eje y.
 float rotationAngleY = 0.0;
+//ángulo de rotación de la cámara en el eje z.
 float rotationAngleZ = 0.0;
 
-//Variables para el control del mouse en las ventanas de ajedrez
+//bandera que indica si el mouse está presionado en la ventana del tablero.
 int mouseTablero = 0;
+//bandera que indica si el mouse está presionado en la ventana del tablero con piezas.
 int mouseTableroConPiezas = 0;
+//bandera que indica si el mouse está presionado en la ventana de piezas blancas.
 int mousePiezasBlancas = 0;
+//bandera que indica si el mouse está presionado en la ventana de piezas negras.
 int mousePiezasNegras = 0;
+//última posición x del mouse en la ventana del tablero.
 int lastMouseXTablero = 0;
+//última posición y del mouse en la ventana del tablero.
 int lastMouseYTablero = 0;
+//última posición x del mouse en la ventana del tablero con piezas.
 int lastMouseXTableroConPiezas = 0;
+//última posición y del mouse en la ventana del tablero con piezas.
 int lastMouseYTableroConPiezas = 0;
+//última posición x del mouse en la ventana de piezas blancas.
 int lastMouseXPiezasBlancas = 0;
+//última posición y del mouse en la ventana de piezas blancas.
 int lastMouseYPiezasBlancas = 0;
+//última posición x del mouse en la ventana de piezas negras.
 int lastMouseXPiezasNegras = 0;
+//última posición y del mouse en la ventana de piezas negras.
 int lastMouseYPiezasNegras = 0;
 
-//Variables para la distancia de la cámara en cada ventana (zoom)
+//distancia de la cámara en la ventana del tablero.
 float cameraDistanceTablero = 20.0;
+//distancia de la cámara en la ventana del tablero con piezas.
 float cameraDistanceTableroConPiezas = 20.0;
+//distancia de la cámara en la ventana de piezas blancas.
 float cameraDistancePiezasBlancas = 5.0;
+//distancia de la cámara en la ventana de piezas negras.
 float cameraDistancePiezasNegras = 5.0;
 
-//Variables de cámara separadas para piezas blancas y negras
+//posición x de la cámara para la ventana de piezas blancas.
 float cameraXPiezasBlancas = 0.0;
+//posición y de la cámara para la ventana de piezas blancas.
 float cameraYPiezasBlancas = 0.0;
+//posición z de la cámara para la ventana de piezas blancas.
 float cameraZPiezasBlancas = 5.0;
+//posición x de la cámara para la ventana de piezas negras.
 float cameraXPiezasNegras = 0.0;
+//posición y de la cámara para la ventana de piezas negras.
 float cameraYPiezasNegras = 0.0;
+//posición z de la cámara para la ventana de piezas negras.
 float cameraZPiezasNegras = 5.0;
 
-//Declaración de una variable para calcular el angulo
+//variable para almacenar el ángulo de rotación.
 float angulo = 0.0f;
 
+//posición x de la torre en la casilla a1.
 float torreA1PosX = 0.0;
+//posición x del caballo en la casilla b1.
 float caballoB1PosX = 0.0;
+//posición x del alfil en la casilla c1.
 float alfilC1PosX = 0.0;
+//posición x de la reina en la casilla d1.
 float reinaD1PosX = 0.0;
+//posición x del rey en la casilla e1.
 float reyE1PosX = 0.0;
+//posición x del alfil en la casilla f1.
 float alfilF1PosX = 0.0;
+//posición x del caballo en la casilla g1.
 float caballoG1PosX = 0.0;
+//posición x de la torre en la casilla h1.
 float torreH1PosX = 0.0;
+//posición y del alfil en la casilla c1.
 float alfilC1PosY2 = 0.0;
+//posición y de la reina en la casilla d1.
 float reinaD1PosY2 = 0.0;
+//posición y del rey en la casilla e1.
 float reyE1PosY = 0.0;
+//posición y del alfil en la casilla f1.
 float alfilF1PosY2 = 0.0;
+//posición y del alfil en la casilla c8.
 float alfilC8PosY2 = 0.0;
+//posición y de la reina en la casilla d8.
 float reinaD8PosY2 = 0.0;
+//posición y del rey en la casilla e8.
 float reyE8PosY = 0.0;
+//posición x del peón en la casilla a1.
 float peonA1PosX = 0.0;
+//posición x del peón en la casilla b1.
 float peonB1PosX = 0.0;
+//posición x del peón en la casilla c1.
 float peonC1PosX = 0.0;
+//posición x del peón en la casilla d1.
 float peonD1PosX = 0.0;
+//posición x del peón en la casilla e1.
 float peonE1PosX = 0.0;
+//posición x del peón en la casilla f1.
 float peonF1PosX = 0.0;
+//posición x del peón en la casilla g1.
 float peonG1PosX = 0.0;
+//posición x del peón en la casilla h1.
 float peonH1PosX = 0.0;
+//posición x del peón en la casilla a8.
 float peonA8PosX = 0.0;
+//posición x del peón en la casilla b8.
 float peonB8PosX = 0.0;
+//posición x del peón en la casilla c8.
 float peonC8PosX = 0.0;
+//posición x del peón en la casilla d8.
 float peonD8PosX = 0.0;
+//posición x del peón en la casilla e8.
 float peonE8PosX = 0.0;
+//posición x del peón en la casilla f8.
 float peonF8PosX = 0.0;
+//posición x del peón en la casilla g8.
 float peonG8PosX = 0.0;
+//posición x del peón en la casilla h8.
 float peonH8PosX = 0.0;
+//posición y del alfil en la casilla f8.
 float alfilF8PosY2 = 0.0;
 
+//posición x del peón en la casilla a2.
 float peonA2PosX = 0.0;
+//bandera que indica si el peón en a2 puede hacer su primer movimiento de dos casillas.
 int primerA2Movimiento = 1;
+//posición x del peón en la casilla b2.
 float peonB2PosX = 0.0;
+//bandera que indica si el peón en b2 puede hacer su primer movimiento de dos casillas.
 int primerB2Movimiento = 1;
+//posición x del peón en la casilla c2.
 float peonC2PosX = 0.0;
+//bandera que indica si el peón en c2 puede hacer su primer movimiento de dos casillas.
 int primerC2Movimiento = 1;
+//posición x del peón en la casilla d2.
 float peonD2PosX = 0.0;
+//bandera que indica si el peón en d2 puede hacer su primer movimiento de dos casillas.
 int primerD2Movimiento = 1;
+//posición x del peón en la casilla e2.
 float peonE2PosX = 0.0;
+//bandera que indica si el peón en e2 puede hacer su primer movimiento de dos casillas.
 int primerE2Movimiento = 1;
+//posición x del peón en la casilla f2.
 float peonF2PosX = 0.0;
+//bandera que indica si el peón en f2 puede hacer su primer movimiento de dos casillas.
 int primerF2Movimiento = 1;
+//posición x del peón en la casilla g2.
 float peonG2PosX = 0.0;
+//bandera que indica si el peón en g2 puede hacer su primer movimiento de dos casillas.
 int primerG2Movimiento = 1;
+//posición x del peón en la casilla h2.
 float peonH2PosX = 0.0;
+//bandera que indica si el peón en h2 puede hacer su primer movimiento de dos casillas.
 int primerH2Movimiento = 1;
 
+//posición x del peón en la casilla a7.
 float peonA7PosX = 0.0;
+//bandera que indica si el peón en a7 puede hacer su primer movimiento de dos casillas.
 int primerA7Movimiento = 1;
+//posición x del peón en la casilla b7.
 float peonB7PosX = 0.0;
+//bandera que indica si el peón en b7 puede hacer su primer movimiento de dos casillas.
 int primerB7Movimiento = 1;
+//posición x del peón en la casilla c7.
 float peonC7PosX = 0.0;
+//bandera que indica si el peón en c7 puede hacer su primer movimiento de dos casillas.
 int primerC7Movimiento = 1;
+//posición x del peón en la casilla d7.
 float peonD7PosX = 0.0;
+//bandera que indica si el peón en d7 puede hacer su primer movimiento de dos casillas.
 int primerD7Movimiento = 1;
+//posición x del peón en la casilla e7.
 float peonE7PosX = 0.0;
+//bandera que indica si el peón en e7 puede hacer su primer movimiento de dos casillas.
 int primerE7Movimiento = 1;
+//posición x del peón en la casilla f7.
 float peonF7PosX = 0.0;
+//bandera que indica si el peón en f7 puede hacer su primer movimiento de dos casillas.
 int primerF7Movimiento = 1;
+//posición x del peón en la casilla g7.
 float peonG7PosX = 0.0;
+//bandera que indica si el peón en g7 puede hacer su primer movimiento de dos casillas.
 int primerG7Movimiento = 1;
+//posición x del peón en la casilla h7.
 float peonH7PosX = 0.0;
+//bandera que indica si el peón en h7 puede hacer su primer movimiento de dos casillas.
 int primerH7Movimiento = 1;
 
+//posición x de la torre en la casilla a8.
 float torreA8PosX = 0.0;
+//posición x del caballo en la casilla b8.
 float caballoB8PosX = 0.0;
+//posición x del alfil en la casilla c8.
 float alfilC8PosX = 0.0;
+//posición x de la reina en la casilla d8.
 float reinaD8PosX = 0.0;
+//posición x del rey en la casilla e8.
 float reyE8PosX = 0.0;
+//posición x del alfil en la casilla f8.
 float alfilF8PosX = 0.0;
+//posición x del caballo en la casilla g8.
 float caballoG8PosX = 0.0;
+//posición x de la torre en la casilla h8.
 float torreH8PosX = 0.0;
 
-//Declaración de variable glogal para las piezas blancas y negras.
+//variable global para seleccionar la pieza blanca a mostrar.
 int piezab = 0;
+//variable global para seleccionar la pieza negra a mostrar.
 int piezan = 0;
 
-//Declaración de variable para el tamaño de la ventana.
+//ancho de la ventana en píxeles.
 int windowWidth = 800;
+//alto de la ventana en píxeles.
 int windowHeight = 600;
 
-//Variables globales para que cualquier figura se pueda mover en el eje x, y, z.
+//desplazamiento en el eje x para mover figuras.
 float eje_x = 0.0;
+//desplazamiento en el eje y para mover figuras.
 float eje_y = 0.0;
+//desplazamiento en el eje z para mover figuras.
 float eje_z = 0.0;
 
+//desplazamiento adicional en el eje m.
 float eje_m = 0.0;
+//desplazamiento adicional en el eje l.
 float eje_l = 0.0;
+//desplazamiento adicional en el eje n.
 float eje_n = 0.0;
 
-//Variables globales para que cualquier figura pueda rotar en x, y, z.
+//ángulo de rotación en el eje x.
 float eje_w = 0.0;
+//ángulo de rotación en el eje y.
 float eje_a = 0.0;
+//ángulo de rotación en el eje z.
 float eje_d = 0.0;
 
-//Variables globales para que se pueda hacer el movimiento de la cámara.
+//posición x de la cámara.
 float cameraX = 0.0;
+//posición y de la cámara.
 float cameraY = 0.0;
+//posición z de la cámara.
 float cameraZ = 5.0;
 
-//Variables globales para la traslación y otras configuraciones.
+//desplazamiento en el eje x para trasladar figuras.
 double Sx = 0.0;
+//desplazamiento en el eje y para trasladar figuras.
 double Sy = 0.0;
+//desplazamiento en el eje z para trasladar figuras.
 double Sz = 0.0;
+//factor de escala para las figuras.
 int dd = 1;
 
-//Variables globales para el ángulo de rotación de esferas y anillo.
+//posición de la esfera superior en el eje y.
 double esfera_superior01 = 0.0;
+//posición de la esfera superior en el eje z.
 double esfera_superior02 = 0.0;
+//posición del anillo superior.
 double anillo_superior = 0.0;
+//índice para controlar el tipo de pieza.
 int indice = 0;
+//índice alternativo para controlar el tipo de pieza.
 int indice02;
+//variable que almacena el tipo de pieza actual.
 int pieza = 0;
 
-//Declaramos las variables globales.
+//declaración de función para dibujar un elipsoide.
 void dibujar_elipsoide(float a1, float a2, float b1, float b2);
+//declaración de función para dibujar el fondo de las piezas.
 void dibujar_fondo();
+//declaración de función para dibujar un cubo.
 void dibujar_cubo(float x, float y, float z);
+//declaración de función para inicializar el tablero de ajedrez.
 void inicializarTablero(void);
+//declaración de función para calcular los movimientos válidos de una pieza.
 void calcularMovimientosValidos(int fila, int columna);
+//declaración de función para mostrar el texto del rey.
 void texto_Rey();
+//declaración de función para mostrar el texto de la reina.
 void texto_Reina();
+//declaración de función para mostrar el texto del alfil.
 void texto_Alfil();
+//declaración de función para mostrar el texto del caballo.
 void texto_Caballo();
+//declaración de función para mostrar el texto de la torre.
 void texto_Torre();
+//declaración de función para mostrar el texto del peón.
 void texto_Peon();
+//declaración de función para dibujar el rey de color blanco.
 void dibujar_Rey_blanco();
+//declaración de función para dibujar el rey de color negro.
 void dibujar_Rey_negro();
+//declaración de función para dibujar el rey de color gris.
 void dibujar_Rey_gris();
+//declaración de función para dibujar la reina de color blanco.
 void dibujar_Reina_blanca();
+//declaración de función para dibujar la reina de color negro.
 void dibujar_Reina_negra();
+//declaración de función para dibujar la reina de color gris.
 void dibujar_Reina_gris();
+//declaración de función para dibujar el alfil de color blanco.
 void dibujar_Alfil_blanco();
+//declaración de función para dibujar el alfil de color negro.
 void dibujar_Alfil_negro();
+//declaración de función para dibujar el alfil de color gris.
 void dibujar_Alfil_gris();
+//declaración de función para dibujar el caballo de color blanco.
 void dibujar_Caballo_blanco();
+//declaración de función para dibujar el caballo de color negro.
 void dibujar_Caballo_negro();
+//declaración de función para dibujar el caballo de color gris.
 void dibujar_Caballo_gris();
+//declaración de función para dibujar la torre de color blanco.
 void dibujar_Torre_blanca();
+//declaración de función para dibujar la torre de color negro.
 void dibujar_Torre_negra();
+//declaración de función para dibujar la torre de color gris.
 void dibujar_Torre_gris();
+//declaración de función para dibujar el peón de color blanco.
 void dibujar_Peon_blanco();
+//declaración de función para dibujar el peón de color negro.
 void dibujar_Peon_negro();
+//declaración de función para dibujar el peón de color gris.
 void dibujar_Peon_gris();
+//declaración de función para dibujar el tablero sin piezas.
 void tablero_sinpiezas();
+//declaración de función para dibujar el tablero de ajedrez.
 void dibujar_tablero();
+//declaración de función para manejar los movimientos de la cámara.
 void movimientitos();
+//declaración de función para dibujar las piezas blancas.
 void piezas_blancas();
+//declaración de función para dibujar las piezas negras.
 void piezas_negras();
+//declaración de función para manejar las teclas especiales.
 void specialKeys(int key, int x, int y);
+//declaración de función para manejar el movimiento del menú.
 void movimientoMenu(unsigned char key, int x, int y);
+//declaración de función para rotar una figura.
 void rotarfigura(unsigned char key, int w, int a, int d);
+//declaración de función para mover la cámara.
 void movercamara(int key, int x, int y);
+//declaración de función para redimensionar la ventana 01.
 static void reshape01(int w, int h);
+//declaración de función para redimensionar la ventana 02.
 void reshape02(int w, int h);
+//declaración de función para inicializar la ventana 01.
 static void init01(void);
+//declaración de función para dibujar los tableros.
 void tableros();
+//declaración de función para manejar el menú.
 void menu(int value);
+//declaración de función para manejar los movimientos.
 void movimientos(unsigned char key, int x, int y);
 
-//Sirve para dibujar un elipsoide dividido en polígonos.
+//función para dibujar un elipsoide dividido en polígonos.
 void dibujar_elipsoide(float a1, float a2, float b1, float b2) {
-    
-    //Definir la cantidad de divisiones en los ejes alfa y beta.
-    int na = 32; //número de divisiones en el eje alfa.
-    int nb = 16; //número de divisiones en el eje beta.
-
-    // Variables para almacenar los ángulos alfa y beta y sus incrementos.
+    //número de divisiones en el eje alfa.
+    int na = 32;
+    //número de divisiones en el eje beta.
+    int nb = 16;
+    //variable para almacenar el ángulo alfa.
     float alpha;
-    float dalpha = (a2 - a1) / na; //incremento en alfa.
+    //incremento en el ángulo alfa.
+    float dalpha = (a2 - a1) / na;
+    //variable para almacenar el ángulo beta.
     float beta;
-    float dbeta = (b2 - b1) / nb; //incremento en beta.
-    beta = b2; //inicializar beta con el valor b2 y realizar bucles para las divisiones en beta.
+    //incremento en el ángulo beta.
+    float dbeta = (b2 - b1) / nb;
+    //inicializar beta con el valor b2.
+    beta = b2;
+    //bucle para iterar sobre las divisiones en beta.
     for (int j = 0; j < nb; j++, beta -= dbeta) {
-        alpha = a1; //inicializar alpha con el valor a1 y realizar bucles para las divisiones en alf.
+        //inicializar alpha con el valor a1.
+        alpha = a1;
+        //bucle para iterar sobre las divisiones en alpha.
         for (int i = 0; i < na; i++, alpha += dalpha) {
-            struct punto p; //estructura para almacenar las coordenadas cartesianas convertidas de esféricas.
-            glBegin(GL_POLYGON); //iniciar un nuevo polígono con GL_POLYGON.
-            p = esferico(alpha, beta, 1); //obtener las coordenadas cartesianas de un punto en elipsoide mediante coordenadas esféricas.
-            glNormal3f(p.x, p.y, p.z); //especificar la normal para la iluminación.
-            glVertex3f(p.x, p.y, p.z); //especificar un vértice del polígono con glVertex3f.
-
-            //Repetir el proceso para los demás vértices del polígono.
+            //estructura para almacenar las coordenadas del punto.
+            struct punto p;
+            //iniciar la definición de un polígono.
+            glBegin(GL_POLYGON);
+            //obtener las coordenadas cartesianas del primer vértice.
+            p = esferico(alpha, beta, 1);
+            //especificar la normal del primer vértice para la iluminación.
+            glNormal3f(p.x, p.y, p.z);
+            //especificar el primer vértice del polígono.
+            glVertex3f(p.x, p.y, p.z);
+            //obtener las coordenadas cartesianas del segundo vértice.
             p = esferico(alpha + dalpha, beta, 1);
+            //especificar la normal del segundo vértice para la iluminación.
             glNormal3f(p.x, p.y, p.z);
+            //especificar el segundo vértice del polígono.
             glVertex3f(p.x, p.y, p.z);
+            //obtener las coordenadas cartesianas del tercer vértice.
             p = esferico(alpha + dalpha, beta - dbeta, 1);
+            //especificar la normal del tercer vértice para la iluminación.
             glNormal3f(p.x, p.y, p.z);
+            //especificar el tercer vértice del polígono.
             glVertex3f(p.x, p.y, p.z);
+            //obtener las coordenadas cartesianas del cuarto vértice.
             p = esferico(alpha, beta - dbeta, 1);
+            //especificar la normal del cuarto vértice para la iluminación.
             glNormal3f(p.x, p.y, p.z);
+            //especificar el cuarto vértice del polígono.
             glVertex3f(p.x, p.y, p.z);
-            glEnd(); //finalizar el polígono con glEnd
+            //finalizar la definición del polígono.
+            glEnd();
         }
     }
 }
 
-//Dibuja el fondo que consiste en dos elipsoides.
+//función para dibujar el fondo que consiste en dos elipsoides.
 void dibujar_fondo() {
-
-    //Dibuja el primer elipsoide en el fondo.
+    //guardar la matriz de transformación actual.
     glPushMatrix();
+    //trasladar el primer elipsoide en el eje y.
     glTranslatef(0.0f, 0.6f, 0.0f);
+    //rotar el primer elipsoide -90 grados alrededor del eje x.
     glRotated(-90, 1.0f, 0.0f, 0.0f);
-
-    //Escala el primer elipsoide para hacerlo más ancho y alto
+    //escalar el primer elipsoide para hacerlo más ancho y alto.
     glScalef(1.5, 1.5, 0.8);
+    //dibujar el primer elipsoide.
     dibujar_elipsoide(0, 2 * M_PI, 0, M_PI / 2);
+    //restaurar la matriz de transformación.
     glPopMatrix();
-    
-    //Dibuja el segundo elipsoide en el fondo.
+    //guardar la matriz de transformación actual.
     glPushMatrix();
+    //trasladar el segundo elipsoide en el eje y.
     glTranslatef(0.0f, 0.9f, 0.0f);
+    //rotar el segundo elipsoide -90 grados alrededor del eje x.
     glRotated(-90, 1.0f, 0.0f, 0.0f);
-
-    //Escala el segundo elipsoide para ajustar sus dimensiones
+    //escalar el segundo elipsoide para ajustar sus dimensiones.
     glScalef(1.4, 1.4, 1.0);
-    dibujar_elipsoide(0, 2 * M_PI, 0, M_PI / 2); /*el M_PI se utiliza para definor los angulos en términos de pi en las funciones trigonométricas
-    como cos y sin, que se utilizan en la funcion dibujar_elipsoide para especificar los rangos de ángulos de los cuales se dibujan los elipsoides.*/
+    //dibujar el segundo elipsoide.
+    dibujar_elipsoide(0, 2 * M_PI, 0, M_PI / 2);
+    //restaurar la matriz de transformación.
     glPopMatrix();
 }
 
-//Esta función dibuja un cubo para que se pueda hacer el tablero.
+//función para dibujar un cubo para construir el tablero.
 void dibujar_cubo(float x, float y, float z) {
+    //guardar la matriz de transformación actual.
     glPushMatrix();
+    //trasladar el cubo a la posición especificada.
     glTranslatef(x, y, z);
-
+    //iniciar la definición de cuadriláteros.
     glBegin(GL_QUADS);
-
-    glVertex3f(-0.5, -0.5, 0.5); // Vértice 1 de la cara frontal inferior izquierda.
-    glVertex3f(0.5, -0.5, 0.5);  // Vértice 2 de la cara frontal inferior derecha.
-    glVertex3f(0.5, 0.5, 0.5);   // Vértice 3 de la cara frontal superior derecha.
-    glVertex3f(-0.5, 0.5, 0.5);  // Vértice 4 de la cara frontal superior izquierda.
-
-    glVertex3f(-0.5, -0.5, -0.5); // Vértice 1 de la cara posterior inferior izquierda.
-    glVertex3f(0.5, -0.5, -0.5);  // Vértice 2 de la cara posterior inferior derecha.
-    glVertex3f(0.5, 0.5, -0.5);   // Vértice 3 de la cara posterior superior derecha.
-    glVertex3f(-0.5, 0.5, -0.5);  // Vértice 4 de la cara posterior superior izquierda.
-
-    glVertex3f(-0.5, -0.5, 0.5); // Vértice 1 de la cara inferior izquierda.
-    glVertex3f(0.5, -0.5, 0.5);  // Vértice 2 de la cara inferior derecha.
-    glVertex3f(0.5, -0.5, -0.5); // Vértice 3 de la cara posterior inferior derecha.
-    glVertex3f(-0.5, -0.5, -0.5); // Vértice 4 de la cara posterior inferior izquierda.
-
-    glVertex3f(0.5, -0.5, 0.5); // Vértice 1 de la cara frontal derecha inferior.
-    glVertex3f(0.5, 0.5, 0.5);  // Vértice 2 de la cara frontal derecha superior.
-    glVertex3f(0.5, 0.5, -0.5); // Vértice 3 de la cara posterior derecha superior.
-    glVertex3f(0.5, -0.5, -0.5); // Vértice 4 de la cara posterior derecha inferior.
-
-    glVertex3f(0.5, 0.5, 0.5); // Vértice 1 de la cara frontal superior derecha.
-    glVertex3f(-0.5, 0.5, 0.5); // Vértice 2 de la cara frontal superior izquierda.
-    glVertex3f(-0.5, 0.5, -0.5); // Vértice 3 de la cara posterior superior izquierda.
-    glVertex3f(0.5, 0.5, -0.5); // Vértice 4 de la cara posterior superior derecha.
-
-    glVertex3f(-0.5, 0.5, 0.5); // Vértice 1 de la cara frontal izquierda superior.
-    glVertex3f(-0.5, -0.5, 0.5); // Vértice 2 de la cara frontal izquierda inferior.
-    glVertex3f(-0.5, -0.5, -0.5); // Vértice 3 de la cara posterior izquierda inferior.
-    glVertex3f(-0.5, 0.5, -0.5); // Vértice 4 de la cara posterior izquierda superior.
-    glEnd(); //finaliza la definición de los quads.
-    glPopMatrix(); //restaura la matriz previamente guardada en la pila.
+    //primer vértice de la cara frontal inferior izquierda.
+    glVertex3f(-0.5, -0.5, 0.5);
+    //segundo vértice de la cara frontal inferior derecha.
+    glVertex3f(0.5, -0.5, 0.5);
+    //tercer vértice de la cara frontal superior derecha.
+    glVertex3f(0.5, 0.5, 0.5);
+    //cuarto vértice de la cara frontal superior izquierda.
+    glVertex3f(-0.5, 0.5, 0.5);
+    //primer vértice de la cara posterior inferior izquierda.
+    glVertex3f(-0.5, -0.5, -0.5);
+    //segundo vértice de la cara posterior inferior derecha.
+    glVertex3f(0.5, -0.5, -0.5);
+    //tercer vértice de la cara posterior superior derecha.
+    glVertex3f(0.5, 0.5, -0.5);
+    //cuarto vértice de la cara posterior superior izquierda.
+    glVertex3f(-0.5, 0.5, -0.5);
+    //primer vértice de la cara inferior izquierda.
+    glVertex3f(-0.5, -0.5, 0.5);
+    //segundo vértice de la cara inferior derecha.
+    glVertex3f(0.5, -0.5, 0.5);
+    //tercer vértice de la cara posterior inferior derecha.
+    glVertex3f(0.5, -0.5, -0.5);
+    //cuarto vértice de la cara posterior inferior izquierda.
+    glVertex3f(-0.5, -0.5, -0.5);
+    //primer vértice de la cara frontal derecha inferior.
+    glVertex3f(0.5, -0.5, 0.5);
+    //segundo vértice de la cara frontal derecha superior.
+    glVertex3f(0.5, 0.5, 0.5);
+    //tercer vértice de la cara posterior derecha superior.
+    glVertex3f(0.5, 0.5, -0.5);
+    //cuarto vértice de la cara posterior derecha inferior.
+    glVertex3f(0.5, -0.5, -0.5);
+    //primer vértice de la cara frontal superior derecha.
+    glVertex3f(0.5, 0.5, 0.5);
+    //segundo vértice de la cara frontal superior izquierda.
+    glVertex3f(-0.5, 0.5, 0.5);
+    //tercer vértice de la cara posterior superior izquierda.
+    glVertex3f(-0.5, 0.5, -0.5);
+    //cuarto vértice de la cara posterior superior derecha.
+    glVertex3f(0.5, 0.5, -0.5);
+    //primer vértice de la cara frontal izquierda superior.
+    glVertex3f(-0.5, 0.5, 0.5);
+    //segundo vértice de la cara frontal izquierda inferior.
+    glVertex3f(-0.5, -0.5, 0.5);
+    //tercer vértice de la cara posterior izquierda inferior.
+    glVertex3f(-0.5, -0.5, -0.5);
+    //cuarto vértice de la cara posterior izquierda superior.
+    glVertex3f(-0.5, 0.5, -0.5);
+    //finalizar la definición de los cuadriláteros.
+    glEnd();
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
 }
 
-//Esta función nos es un texto el cual cuando aparece el Rey esta hace que diga "REY" en la esquina inferior izquierda.
+//función para mostrar el texto "rey" en la esquina inferior izquierda.
 void texto_Rey(){
-    glClear(GL_COLOR_BUFFER_BIT); //borra el buffer de color para preparar la escena.
-    glColor3f(0.0, 0.0, 0.0); //establece el color de dibujo a negro.
-    glRasterPos2f(-1.7, -1.7); //establece la posición inicial para el texto.
-    char text[] = "REY"; //declara una cadena de caracteres para el texto.
-    for (int i = 0; text[i] != '\0'; i++) { //itera a través de cada carácter de la cadena hasta llegar al carácter nulo '\0'.
-        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]); //utiliza la función glutBitmapCharacter para renderizar cada carácter en la posición actual.
+    //limpiar el buffer de color para preparar la escena.
+    glClear(GL_COLOR_BUFFER_BIT);
+    //establecer el color de dibujo a negro.
+    glColor3f(0.0, 0.0, 0.0);
+    //establecer la posición inicial para el texto.
+    glRasterPos2f(-1.7, -1.7);
+    //cadena de caracteres que contiene el texto a mostrar.
+    char text[] = "REY";
+    //bucle para iterar a través de cada carácter de la cadena.
+    for (int i = 0; text[i] != '\0'; i++) {
+        //renderizar cada carácter en la posición actual.
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
     }
-    glFlush(); //vacía los comandos pendientes para asegurar que el texto se muestra.
+    //vaciar los comandos pendientes para asegurar que el texto se muestre.
+    glFlush();
 }
 
-//Esta función nos es un texto el cual cuando aparece la Reina esta hace que diga "REINA" en la esquina inferior izquierda.
+//función para mostrar el texto "reina" en la esquina inferior izquierda.
 void texto_Reina(){
+    //limpiar el buffer de color para preparar la escena.
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.0, 0.0, 0.0); //negro.
-    glRasterPos2f(-1.7, -1.7); //posición del texto.
-    char text[] = "REINA"; //declaramos una cadena de caracteres para el texto.
-    for (int i = 0; text[i] != '\0'; i++) { //iteramos a través de cada carácter de la cadena hasta llegar al carácter nulo '\0'.
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);//utilizamos la función glutBitmapCharacter para renderizar cada carácter en la posición actual.
-}
+    //establecer el color de dibujo a negro.
+    glColor3f(0.0, 0.0, 0.0);
+    //establecer la posición inicial para el texto.
+    glRasterPos2f(-1.7, -1.7);
+    //cadena de caracteres que contiene el texto a mostrar.
+    char text[] = "REINA";
+    //bucle para iterar a través de cada carácter de la cadena.
+    for (int i = 0; text[i] != '\0'; i++) {
+        //renderizar cada carácter en la posición actual.
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
+    }
+    //vaciar los comandos pendientes para asegurar que el texto se muestre.
     glFlush();
 }
 
-//Esta función nos es un texto el cual cuando aparece el Alfil esta hace que diga "ALFIL" en la esquina inferior izquierda.
+//función para mostrar el texto "alfil" en la esquina inferior izquierda.
 void texto_Alfil(){
+    //limpiar el buffer de color para preparar la escena.
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.0, 0.0, 0.0); //negro.
-    glRasterPos2f(-1.7, -1.7); //posición del texto.
-    char text[] = "ALFIL"; //declaramos una cadena de caracteres para el texto.
-    for (int i = 0; text[i] != '\0'; i++) { //iteramos a través de cada carácter de la cadena hasta llegar al carácter nulo '\0'.
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);//utilizamos la función glutBitmapCharacter para renderizar cada carácter en la posición actual.
-}
+    //establecer el color de dibujo a negro.
+    glColor3f(0.0, 0.0, 0.0);
+    //establecer la posición inicial para el texto.
+    glRasterPos2f(-1.7, -1.7);
+    //cadena de caracteres que contiene el texto a mostrar.
+    char text[] = "ALFIL";
+    //bucle para iterar a través de cada carácter de la cadena.
+    for (int i = 0; text[i] != '\0'; i++) {
+        //renderizar cada carácter en la posición actual.
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
+    }
+    //vaciar los comandos pendientes para asegurar que el texto se muestre.
     glFlush();
 }
 
-//Esta función nos es un texto el cual cuando aparece el Caballo esta hace que diga "CABALLO" en la esquina inferior izquierda.
+//función para mostrar el texto "caballo" en la esquina inferior izquierda.
 void texto_Caballo(){
+    //limpiar el buffer de color para preparar la escena.
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.0, 0.0, 0.0); //negro.
-    glRasterPos2f(-1.7, -1.7); //posición del texto.
-    char text[] = "CABALLO"; //declaramos una cadena de caracteres para el texto.
-    for (int i = 0; text[i] != '\0'; i++) { //iteramos a través de cada carácter de la cadena hasta llegar al carácter nulo '\0'.
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);//utilizamos la función glutBitmapCharacter para renderizar cada carácter en la posición actual.
-}
+    //establecer el color de dibujo a negro.
+    glColor3f(0.0, 0.0, 0.0);
+    //establecer la posición inicial para el texto.
+    glRasterPos2f(-1.7, -1.7);
+    //cadena de caracteres que contiene el texto a mostrar.
+    char text[] = "CABALLO";
+    //bucle para iterar a través de cada carácter de la cadena.
+    for (int i = 0; text[i] != '\0'; i++) {
+        //renderizar cada carácter en la posición actual.
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
+    }
+    //vaciar los comandos pendientes para asegurar que el texto se muestre.
     glFlush();
 }
 
-//Esta función nos es un texto el cual cuando aparece la Torre esta hace que diga "TORRE" en la esquina inferior izquierda.
+//función para mostrar el texto "torre" en la esquina inferior izquierda.
 void texto_Torre(){
+    //limpiar el buffer de color para preparar la escena.
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.0, 0.0, 0.0); //negro.
-    glRasterPos2f(-1.7, -1.7); //posición del texto.
-    char text[] = "TORRE"; //declaramos una cadena de caracteres para el texto.
-    for (int i = 0; text[i] != '\0'; i++) { //iteramos a través de cada carácter de la cadena hasta llegar al carácter nulo '\0'.
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);//utilizamos la función glutBitmapCharacter para renderizar cada carácter en la posición actual.
-}
+    //establecer el color de dibujo a negro.
+    glColor3f(0.0, 0.0, 0.0);
+    //establecer la posición inicial para el texto.
+    glRasterPos2f(-1.7, -1.7);
+    //cadena de caracteres que contiene el texto a mostrar.
+    char text[] = "TORRE";
+    //bucle para iterar a través de cada carácter de la cadena.
+    for (int i = 0; text[i] != '\0'; i++) {
+        //renderizar cada carácter en la posición actual.
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
+    }
+    //vaciar los comandos pendientes para asegurar que el texto se muestre.
     glFlush();
 }
 
-//Esta función nos es un texto el cual cuando aparece el Peón esta hace que diga "PEÓN" en la esquina inferior izquierda.
+//función para mostrar el texto "peón" en la esquina inferior izquierda.
 void texto_Peon(){
+    //limpiar el buffer de color para preparar la escena.
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.0, 0.0, 0.0); //negro.
-    glRasterPos2f(-1.7, -1.7); //posición del texto.
-    char text[] = "PEON"; //declaramos una cadena de caracteres para el texto.
-    for (int i = 0; text[i] != '\0'; i++) { //iteramos a través de cada carácter de la cadena hasta llegar al carácter nulo '\0'.
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);//utilizamos la función glutBitmapCharacter para renderizar cada carácter en la posición actual.
-}
+    //establecer el color de dibujo a negro.
+    glColor3f(0.0, 0.0, 0.0);
+    //establecer la posición inicial para el texto.
+    glRasterPos2f(-1.7, -1.7);
+    //cadena de caracteres que contiene el texto a mostrar.
+    char text[] = "PEON";
+    //bucle para iterar a través de cada carácter de la cadena.
+    for (int i = 0; text[i] != '\0'; i++) {
+        //renderizar cada carácter en la posición actual.
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
+    }
+    //vaciar los comandos pendientes para asegurar que el texto se muestre.
     glFlush();
 }
 
-// Esta función muestra un texto que dice "TABLERO" en la esquina inferior izquierda cuando aparece el Rey.
+//función para mostrar el texto "tablero" en la esquina inferior izquierda.
 void texto_Tablero() {
+    //limpiar el buffer de color para preparar la escena.
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.0, 0.0, 0.0); //negro.
-    glRasterPos2f(-1.7, -1.7); //posición del texto.
-    char text[] = "TABLERO"; //declaramos una cadena de caracteres para el texto.
-    for (int i = 0; text[i] != '\0'; i++) { //iteramos a través de cada carácter de la cadena hasta llegar al carácter nulo '\0'.
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);//utilizamos la función glutBitmapCharacter para renderizar cada carácter en la posición actual.
-}
+    //establecer el color de dibujo a negro.
+    glColor3f(0.0, 0.0, 0.0);
+    //establecer la posición inicial para el texto.
+    glRasterPos2f(-1.7, -1.7);
+    //cadena de caracteres que contiene el texto a mostrar.
+    char text[] = "TABLERO";
+    //bucle para iterar a través de cada carácter de la cadena.
+    for (int i = 0; text[i] != '\0'; i++) {
+        //renderizar cada carácter en la posición actual.
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
+    }
+    //vaciar los comandos pendientes para asegurar que el texto se muestre.
     glFlush();
 }
 
-//Función que dibuja al Rey.
+//función para dibujar el rey.
 void dibujar_Rey(){
-
-    //Configuración de la matriz de modelo-vista.
+    //establecer la matriz de modelo-vista como la matriz activa.
     glMatrixMode(GL_MODELVIEW);
+    //guardar la matriz de transformación actual.
     glPushMatrix();
-    glTranslatef(Sx, Sy, Sz); //trasladar la figura en las coordenadas (Sx, Sy, Sz).
-    
-    glScalef(0.33 / dd, 0.33 / dd, 0.33 / dd); //escalar la figura.
+    //trasladar la figura en las coordenadas especificadas.
+    glTranslatef(Sx, Sy, Sz);
+    //escalar la figura según el factor de escala.
+    glScalef(0.33 / dd, 0.33 / dd, 0.33 / dd);
 
-    //Esfera superior.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(0.0f, 6.0f, 0.0f); //traslada la esfera a la posición (0.0, 6.0, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota la esfera -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.4); //escala la esfera en los ejes x, y, y z.
-    glutSolidTorus(0.5f, 0.2f, 40, 40); //dibuja un toro sólido con radios 0.5 y 0.2, usando 40 segmentos en cada dirección.
-    glPopMatrix(); //restaura la matriz previamente guardada en la pila.
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar la esfera superior a la posición especificada.
+    glTranslatef(0.0f, 6.0f, 0.0f);
+    //rotar la esfera -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar la esfera en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.4);
+    //dibujar un toro sólido con los radios y segmentos especificados.
+    glutSolidTorus(0.5f, 0.2f, 40, 40);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
 
-    //Otra parte de la esfera superior.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(0.0f, 5.9f, 0.0f); //traslada la figura a la posición (0.0, 5.9, 0.0).
-    glutSolidSphere(0.34f, 50, 50); //dibuja una esfera sólida con radio 0.34 y 50 segmentos en cada dirección.
-    glTranslatef(0.0f, 0.55f, 0.0f); //traslada la figura a la posición (0.0, 0.55, 0.0).
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glScalef(1.0f, 0.2f, 0.2f); //escala la figura en los ejes x, y, y z.
-    glutSolidCube(1.0f); //dibuja un cubo sólido con lado 1.0.
-    glPopMatrix(); //restaura la matriz previamente guardada en la pila.
-    glScalef(0.3f, 1.0f, 0.2f); //escala la figura en los ejes x, y, y z.
-    glutSolidCube(1.0f); //dibuja un cubo sólido con lado 1.0.
-    glPopMatrix(); //restaura la matriz previamente guardada en la pila.
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar otra parte de la esfera superior a la posición especificada.
+    glTranslatef(0.0f, 5.9f, 0.0f);
+    //dibujar una esfera sólida con el radio y segmentos especificados.
+    glutSolidSphere(0.34f, 50, 50);
+    //trasladar la figura a la posición especificada.
+    glTranslatef(0.0f, 0.55f, 0.0f);
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //escalar la figura en los ejes x, y y z.
+    glScalef(1.0f, 0.2f, 0.2f);
+    //dibujar un cubo sólido con el lado especificado.
+    glutSolidCube(1.0f);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //escalar la figura en los ejes x, y y z.
+    glScalef(0.3f, 1.0f, 0.2f);
+    //dibujar otro cubo sólido con el lado especificado.
+    glutSolidCube(1.0f);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
 
-    //Anillo elíptico superior
-    glPushMatrix(); //guarda la matriz actual en la pila
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el primer toro del anillo elíptico superior a la posición especificada.
+    glTranslatef(0.0f, 4.10f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.3);
+    //dibujar el primer toro sólido con los radios y segmentos especificados.
+    glutSolidTorus(0.6f, 0.2f, 40, 40);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el segundo toro del anillo elíptico superior a la posición especificada.
+    glTranslatef(0.0f, 4.30f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.2);
+    //dibujar el segundo toro sólido con los radios y segmentos especificados.
+    glutSolidTorus(0.4f, 0.2f, 40, 40);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el tercer toro del anillo elíptico superior a la posición especificada.
+    glTranslatef(0.0f, 4.4f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.2);
+    //dibujar el tercer toro sólido con los radios y segmentos especificados.
+    glutSolidTorus(0.4f, 0.2f, 40, 40);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
 
-    //Primer toro sólido.
-    glTranslatef(0.0f, 4.10f, 0.0f); //traslada el toro a la posición (0.0, 4.10, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el toro -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.3); //escala el toro en los ejes x, y, y z.
-    glutSolidTorus(0.6f, 0.2f, 40, 40); //dibuja un toro sólido con radios 0.6 y 0.2, usando 40 segmentos en cada dirección.
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el cono a la posición especificada.
+    glTranslatef(0.0f, 1.0f, 0.0f);
+    //rotar el cono -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //dibujar el primer cono sólido con el radio base, altura y segmentos especificados.
+    glutSolidCone(1.05f, 5.1f, 50, 50);
+    //rotar el cono -180 grados alrededor del eje y.
+    glRotated(-180, 0.0f, 1.0f, 0.0f);
+    //trasladar el cono a lo largo del eje z.
+    glTranslatef(0.0f, 0.0f, -5.0f);
+    //dibujar el segundo cono sólido con el radio base, altura y segmentos especificados.
+    glutSolidCone(0.7f, 5.6f, 50, 50);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
 
-    //Segundo toro sólido.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(0.0f, 4.30f, 0.0f); //traslada el toro a la posición (0.0, 4.30, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el toro -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.2); //escala el toro en los ejes x, y, y z.
-    glutSolidTorus(0.4f, 0.2f, 40, 40); //dibuja un toro sólido con radios 0.4 y 0.2, usando 40 segmentos en cada dirección.
-
-    //Tercer toro sólido.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(0.0f, 4.4f, 0.0f); //traslada el toro a la posición (0.0, 4.4, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el toro -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.2); //escala el toro en los ejes x, y, y z.
-    glutSolidTorus(0.4f, 0.2f, 40, 40); //dibuja un toro sólido con radios 0.4 y 0.2, usando 40 segmentos en cada dirección.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-
-    //Cono.
-    glPushMatrix(); //guarda la matriz actual en la pila
-    glTranslatef(0.0f, 1.0f, 0.0f); //traslada el cono a la posición (0.0, 1.0, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el cono -90 grados alrededor del eje x.
-    glutSolidCone(1.05f, 5.1f, 50, 50); //dibuja un cono sólido con radio base 1.05, altura 5.1, y 50 segmentos en la base.
-    glRotated(-180, 0.0f, 1.0f, 0.0f); //rota el cono -180 grados alrededor del eje y.
-    glTranslatef(0.0f, 0.0f, -5.0f); //traslada el cono a lo largo del eje z.
-    glutSolidCone(0.7f, 5.6f, 50, 50); //dibuja otro cono sólido con radio base 0.7, altura 5.6, y 50 segmentos en la base.
-    glPopMatrix(); //restaura la matriz previamente guardada en la pila.
-
-    //Círculo inferior.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-
-    //Primer toro sólido.
-    glTranslatef(0.0f, 1.3f, 0.0f); //traslada el toro a la posición (0.0, 1.3, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el toro -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.2); //escala el toro en los ejes x, y, y z.
-    glutSolidTorus(1.0f, 0.3f, 50, 50); //dibuja un toro sólido con radios 1.0 y 0.3, usando 50 segmentos en cada dirección.
-
-    //Segundo toro sólido.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(0.0f, 1.5f, 0.0f); //traslada el toro a la posición (0.0, 1.5, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el toro -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.2); //escala el toro en los ejes x, y, y z.
-    glutSolidTorus(0.8f, 0.3f, 50, 50); //dibuja otro toro sólido con radios 0.8 y 0.3, usando 50 segmentos en cada dirección.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el primer toro del círculo inferior a la posición especificada.
+    glTranslatef(0.0f, 1.3f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.2);
+    //dibujar el primer toro sólido del círculo inferior con los radios y segmentos especificados.
+    glutSolidTorus(1.0f, 0.3f, 50, 50);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el segundo toro del círculo inferior a la posición especificada.
+    glTranslatef(0.0f, 1.5f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.2);
+    //dibujar el segundo toro sólido del círculo inferior con los radios y segmentos especificados.
+    glutSolidTorus(0.8f, 0.3f, 50, 50);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //dibujar el fondo de la pieza.
     dibujar_fondo();
+    //restaurar la matriz de transformación previamente guardada.
     glPopMatrix();
 }
 
-//Función que cambia de color blanco la pieza del Rey.
+//función para dibujar el rey de color blanco.
 void dibujar_Rey_blanco(){
-    glColor3f(1.0, 1.0, 1.0); //blanco.
+    //establecer el color a blanco.
+    glColor3f(1.0, 1.0, 1.0);
+    //dibujar el rey con el color establecido.
     dibujar_Rey();
 }
 
-//Función que cambia de color negro la pieza del Rey.
+//función para dibujar el rey de color negro.
 void dibujar_Rey_negro(){
-    glColor3f(0.0, 0.0, 0.0); //negro.
+    //establecer el color a negro.
+    glColor3f(0.0, 0.0, 0.0);
+    //dibujar el rey con el color establecido.
     dibujar_Rey();
 }
 
-//Función que cambia de color gris la pieza del Rey.
+//función para dibujar el rey de color gris.
 void dibujar_Rey_gris(){
-    glColor3f(0.5, 0.5, 0.5); //gris.
+    //establecer el color a gris.
+    glColor3f(0.5, 0.5, 0.5);
+    //dibujar el rey con el color establecido.
     dibujar_Rey();
 }
 
-//Función que dibuja a la Reina.
+//función para dibujar la reina.
 void dibujar_Reina(){
-    
-    //Configuración de la matriz de modelo-vista y aplicando transformaciones de traslación, rotación y escala.
-    glMatrixMode(GL_MODELVIEW); //establece la matriz de modelo-vista como la matriz activa.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(Sx, Sy, Sz); //traslada la figura a la posición (Sx, Sy, Sz).
-    glScalef(0.33 / dd, 0.34 / dd, 0.33 / dd); //escala la figura en los ejes x, y, y z.
+    //establecer la matriz de modelo-vista como la matriz activa.
+    glMatrixMode(GL_MODELVIEW);
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar la figura a la posición especificada.
+    glTranslatef(Sx, Sy, Sz);
+    //escalar la figura según el factor de escala.
+    glScalef(0.33 / dd, 0.34 / dd, 0.33 / dd);
 
-    //Esfera superior
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(0.0f, 5.9f, 0.0f); //traslada la esfera a la posición (0.0, 5.9, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota la esfera -90 grados alrededor del eje x.
-    glScalef(0.4, 0.4, 0.4); //escala la esfera en los ejes x, y, y z.
-    glutSolidSphere(1, 50, 50); //dibuja una esfera sólida con radio 1, usando 50 segmentos en la dirección de los polos y 50 en la dirección del ecuador.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-
-    //Primer dodecaedro superior.
-    glPushMatrix(); //guarda la matriz de transformación actual en la pila.
-    glTranslatef(0.0f, 6.0f, 0.0f); //translada la figura del dodecaedro a la posición (0.0, 6.0, 0.0) en el espacio tridimensional.
-    glRotated(-90, 0.0f, 1.0f, 0.0f); //rota la figura del dodecaedro -90 grados alrededor del eje y.
-    glScalef(0.45, 0.1, 0.45); //escala la figura del dodecaedro en los ejes x, y, y z. En este caso, se reduce la escala en el eje y (altura) mientras que se mantiene la escala en los otros ejes.
-    glutSolidDodecahedron(); //dibuja un dodecaedro sólido utilizando la función proporcionada por GLUT.
-
-    //Segundo dodecaedro superior.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-    glPushMatrix(); //guarda la matriz de transformación actual en la pila.
-    glTranslatef(0.0f, 6.0f, 0.0f); //translada la figura del dodecaedro a la posición (0.0, 6.0, 0.0) en el espacio tridimensional.
-    glScalef(0.45, 0.1, 0.45); //escala la figura del dodecaedro en los ejes x, y, y z. En este caso, se reduce la escala en el eje y (altura) mientras que se mantiene la escala en los otros ejes.
-    glutSolidDodecahedron(); //dibuja un dodecaedro sólido utilizando la función proporcionada por GLUT.
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar la esfera superior a la posición especificada.
+    glTranslatef(0.0f, 5.9f, 0.0f);
+    //rotar la esfera -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar la esfera en los ejes x, y y z.
+    glScalef(0.4, 0.4, 0.4);
+    //dibujar una esfera sólida con el radio y segmentos especificados.
+    glutSolidSphere(1, 50, 50);
+    //restaurar la matriz de transformación previamente guardada.
     glPopMatrix();
 
-    //Anillo de elipse superior.
-    glPushMatrix(); //guarda la matriz actual en la pila.
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el primer dodecaedro superior a la posición especificada.
+    glTranslatef(0.0f, 6.0f, 0.0f);
+    //rotar el dodecaedro -90 grados alrededor del eje y.
+    glRotated(-90, 0.0f, 1.0f, 0.0f);
+    //escalar el dodecaedro en los ejes x, y y z.
+    glScalef(0.45, 0.1, 0.45);
+    //dibujar el primer dodecaedro sólido.
+    glutSolidDodecahedron();
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el segundo dodecaedro superior a la posición especificada.
+    glTranslatef(0.0f, 6.0f, 0.0f);
+    //escalar el dodecaedro en los ejes x, y y z.
+    glScalef(0.45, 0.1, 0.45);
+    //dibujar el segundo dodecaedro sólido.
+    glutSolidDodecahedron();
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
 
-    //Primer toro sólido.
-    glTranslatef(0.0f, 4.10f, 0.0f); //traslada el toro a la posición (0.0, 4.10, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el toro -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.34); //escala el toro en los ejes x, y, y z.
-    glutSolidTorus(0.6f, 0.2f, 40, 40); // dibuja un toro sólido con radios 0.6 y 0.2, usando 40 segmentos en cada dirección.
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el primer toro del anillo elíptico superior a la posición especificada.
+    glTranslatef(0.0f, 4.10f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.34);
+    //dibujar el primer toro sólido con los radios y segmentos especificados.
+    glutSolidTorus(0.6f, 0.2f, 40, 40);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el segundo toro del anillo elíptico superior a la posición especificada.
+    glTranslatef(0.0f, 4.30f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.2);
+    //dibujar el segundo toro sólido con los radios y segmentos especificados.
+    glutSolidTorus(0.4f, 0.2f, 40, 40);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el tercer toro del anillo elíptico superior a la posición especificada.
+    glTranslatef(0.0f, 4.4f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.2);
+    //dibujar el tercer toro sólido con los radios y segmentos especificados.
+    glutSolidTorus(0.4f, 0.2f, 40, 40);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
 
-    //Segundo toro sólido.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(0.0f, 4.30f, 0.0f); //traslada el toro a la posición (0.0, 4.30, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el toro -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.2); //escala el toro en los ejes x, y, y z.
-    glutSolidTorus(0.4f, 0.2f, 40, 40); //dibuja otro toro sólido con radios 0.4 y 0.2, usando 40 segmentos en cada dirección.
-
-    //Tercer toro sólido.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-    glPushMatrix(); //guarda la matriz actual en la pila.
-    glTranslatef(0.0f, 4.4f, 0.0f); //traslada el toro a la posición (0.0, 4.4, 0.0).
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el toro -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.2); //escala el toro en los ejes x, y, y z.
-    glutSolidTorus(0.4f, 0.2f, 40, 40); //dibuja otro toro sólido con radios 0.4 y 0.2, usando 40 segmentos en cada dirección.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-
-    //Cono.
-    glPushMatrix(); //guarda la matriz de transformación actual en la pila.
-    glTranslatef(0.0f, 1.0f, 0.0f); //translada el cono a la posición (0.0, 1.0, 0.0) en el espacio tridimensional.
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el cono -90 grados alrededor del eje x.
-    glutSolidCone(1.05f, 5.1f, 50, 50); //dibuja un cono sólido con radio base 1.05 y altura 5.1 utilizando la función proporcionada por GLUT.
-    glRotated(-180, 0.0f, 1.0f, 0.0f); //rota el cono -180 grados alrededor del eje y.
-    glTranslatef(0.0f, 0.0f, -5.0f); //translada el cono en el eje z en -5.0 unidades.
-    glutSolidCone(0.7f, 5.6f, 50, 50); //dibuja otro cono sólido con radio base 0.7 y altura 5.6 utilizando la función proporcionada por GLUT.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-
-    // Círculo bajo
-    glPushMatrix(); //guarda la matriz de transformación actual en la pila.
-    glTranslatef(0.0f, 1.3f, 0.0f); //translada el círculo bajo a la posición (0.0, 1.3, 0.0) en el espacio tridimensional.
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el círculo -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.2); //escala el círculo en los ejes x, y, y z. En este caso, se reduce la escala en el eje y mientras que se mantiene la escala en los otros ejes.
-    glutSolidTorus(1.0f, 0.3f, 50, 50); //dibuja un toro sólido con radio mayor 1.0, radio menor 0.3 utilizando la función proporcionada por GLUT.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
-
-    glPushMatrix(); //guarda la matriz de transformación actual en la pila.
-    glTranslatef(0.0f, 1.5f, 0.0f); //translada el segundo círculo bajo a la posición (0.0, 1.5, 0.0) en el espacio tridimensional.
-    glRotated(-90, 1.0f, 0.0f, 0.0f); //rota el segundo círculo -90 grados alrededor del eje x.
-    glScalef(1.0, 1.0, 0.2); //escala el segundo círculo en los ejes x, y, y z. En este caso, se reduce la escala en el eje y mientras que se mantiene la escala en los otros ejes.
-    glutSolidTorus(0.8f, 0.3f, 50, 50); //dibuja un segundo toro sólido con radio mayor 0.8, radio menor 0.3 utilizando la función proporcionada por GLUT.
-    glPopMatrix(); //restaura la matriz a la guardada previamente.
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el cono a la posición especificada.
+    glTranslatef(0.0f, 1.0f, 0.0f);
+    //rotar el cono -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //dibujar el primer cono sólido con el radio base, altura y segmentos especificados.
+    glutSolidCone(1.05f, 5.1f, 50, 50);
+    //rotar el cono -180 grados alrededor del eje y.
+    glRotated(-180, 0.0f, 1.0f, 0.0f);
+    //trasladar el cono a lo largo del eje z.
+    glTranslatef(0.0f, 0.0f, -5.0f);
+    //dibujar el segundo cono sólido con el radio base, altura y segmentos especificados.
+    glutSolidCone(0.7f, 5.6f, 50, 50);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el primer toro del círculo inferior a la posición especificada.
+    glTranslatef(0.0f, 1.3f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.2);
+    //dibujar el primer toro sólido del círculo inferior con los radios y segmentos especificados.
+    glutSolidTorus(1.0f, 0.3f, 50, 50);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //guardar la matriz de transformación actual.
+    glPushMatrix();
+    //trasladar el segundo toro del círculo inferior a la posición especificada.
+    glTranslatef(0.0f, 1.5f, 0.0f);
+    //rotar el toro -90 grados alrededor del eje x.
+    glRotated(-90, 1.0f, 0.0f, 0.0f);
+    //escalar el toro en los ejes x, y y z.
+    glScalef(1.0, 1.0, 0.2);
+    //dibujar el segundo toro sólido del círculo inferior con los radios y segmentos especificados.
+    glutSolidTorus(0.8f, 0.3f, 50, 50);
+    //restaurar la matriz de transformación previamente guardada.
+    glPopMatrix();
+    //dibujar el fondo de la pieza.
     dibujar_fondo();
+    //restaurar la matriz de transformación previamente guardada.
     glPopMatrix();
 }
 
-//Función que cambia de color blanco la pieza de la Reina.
+//función para dibujar la reina de color blanco.
 void dibujar_Reina_blanca(){
-    //Establece el índice actual.
+    //establecer el índice actual.
     indice = indice02;
-
-    //Define la pieza actual como 3 y establece el color a blanco.
+    //definir la pieza actual como reina.
     pieza = 9;
-    glColor3f(1.0, 1.0, 1.0); //blanco.
+    //establecer el color a blanco.
+    glColor3f(1.0, 1.0, 1.0);
+    //dibujar la reina con el color establecido.
     dibujar_Reina();
 }
 
-//Función que cambia de color negro la pieza de la Reina.
+//función para dibujar la reina de color negro.
 void dibujar_Reina_negra(){
 
     //Establece el índice actual.
