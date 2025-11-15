@@ -4,14 +4,6 @@
 
 Este proyecto es un juego de ajedrez 3D implementado en C usando OpenGL y GLUT. Actualmente está en desarrollo y algunas funcionalidades pueden no estar completamente implementadas o pueden tener bugs.
 
-## 👨‍💻 Autor
-
-**Luis Fernando Contreras Matla**
-
-## 🎓 Información Académica
-
-Este proyecto fue creado para la materia de **Graficación por Computadora** de la **Universidad Veracruzana**.
-
 ## 🛠️ Tecnologías Utilizadas
 
 <div align="center">
@@ -19,7 +11,6 @@ Este proyecto fue creado para la materia de **Graficación por Computadora** de 
 <img src="https://img.shields.io/badge/C-A8A8A8?style=for-the-badge&logo=c&logoColor=FFFFFF&labelColor=A8A8A8" alt="C" />
 <img src="https://img.shields.io/badge/OPENGL-5586A4?style=for-the-badge&logo=opengl&logoColor=FFFFFF&labelColor=5586A4" alt="OpenGL" />
 <img src="https://img.shields.io/badge/GLUT-DD6B6B?style=for-the-badge&logo=opengl&logoColor=FFFFFF&labelColor=DD6B6B" alt="GLUT" />
-<img src="https://img.shields.io/badge/MESA-0000FF?style=for-the-badge&logo=opengl&logoColor=FFFFFF&labelColor=0000FF" alt="Mesa" />
 
 </div>
 
@@ -249,6 +240,14 @@ El código está organizado en secciones:
 - [ ] Agregar animaciones de movimiento
 - [ ] Implementar guardado/carga de partidas 💾
 - [ ] Agregar modo de análisis de partidas
+
+## 👨‍💻 Autor
+
+**Luis Fernando Contreras Matla**
+
+## 🎓 Información Académica
+
+Este proyecto fue creado para la materia de **Graficación por Computadora** de la **Universidad Veracruzana**.
 
 ## 📝 Licencia
 
